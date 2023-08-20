@@ -1,0 +1,12 @@
+#Ignore everything in the fast-downward folder
+/exercise-d/fast-downward/builds/**
+/exercise-d/fast-downward/driver/**
+ 
+# But not these files...
+#!.gitignore
+#!README.md
+#!runbench.py
+
+# if the files to be tracked are in subdirectories
+# don't ignore the files we are modifying
+!/exercise-c/fast-downward/src/search/planopt_heuristics/*
