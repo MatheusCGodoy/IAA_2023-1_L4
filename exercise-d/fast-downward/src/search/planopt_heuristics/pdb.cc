@@ -34,7 +34,7 @@ PatternDatabase::PatternDatabase(const TNFTask &task, const Pattern &pattern)
       Priority queues usually order entries so the largest entry is the first.
       By using the comparator greater<T> instead of the default less<T>, we
       change the ordering to sort the smallest element first.
-    */
+    */ 
     priority_queue<QueueEntry, vector<QueueEntry>, greater<QueueEntry>> queue;
     /*
       Note that we start with the goal state to turn the search into a regression.
@@ -49,12 +49,18 @@ PatternDatabase::PatternDatabase(const TNFTask &task, const Pattern &pattern)
       QueueEntry front = queue.top();
       queue.pop();
 
-      vector<int> state = projection.unrank_state(front.second);
-      for(TNFOperator oper : projected_task.operators){
+      if(front.first >= distances[front.second]){
+        continue;
+      }
+
+      distances[front.second] = front.first;
+
+      TNFState state = projection.unrank_state(front.second);
+      for(const TNFOperator &oper : projected_task.operators){
         //vector<int> succ_state = projection.unrank_state(front.second);
         bool bAplicable = true;
-        for(TNFOperatorEntry entry : oper.entries){
-          if(find(state.begin(), state.end(), entry.effect_value) == state.end()){
+        for(const TNFOperatorEntry &entry : oper.entries){
+          if(state[entry.variable_id] != entry.effect_value){
             bAplicable = false;
             break;
           }
@@ -62,17 +68,20 @@ PatternDatabase::PatternDatabase(const TNFTask &task, const Pattern &pattern)
         }
 
         if(bAplicable){
-          vector<int> succ_state = projection.unrank_state(front.second);
-          
-          for(TNFOperatorEntry entry : oper.entries){
+          TNFState succ_state = projection.unrank_state(front.second);
+
+          for(const TNFOperatorEntry &entry : oper.entries){
             succ_state[entry.variable_id] = entry.precondition_value;
           }
 
           QueueEntry successor;
-          successor.first = front.first + 1;
+          successor.first = front.first + oper.cost;
           successor.second = projection.rank_state(succ_state);
-          distances[successor.second] - successor.first;
-          queue.push(successor);
+          
+          // if better cost found then add to queue and update value
+          if(distances[successor.second] > successor.first){
+            queue.push(successor);
+          }
         }
 
       }

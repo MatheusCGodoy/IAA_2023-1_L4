@@ -52,14 +52,24 @@ Projection::Projection(const TNFTask &task, const Pattern &pattern)
     // TODO: add your code for exercise (a) here.
     for(TNFOperator oper : task.operators){
         vector<TNFOperatorEntry> projected_entries;
+        bool bNoOp = true;
         for(TNFOperatorEntry entry : oper.entries){
             if(variable_mapping[entry.variable_id] != -1){
+                if(entry.precondition_value != entry.effect_value){
+                    bNoOp = false;
+                }
+
                 TNFOperatorEntry projected_entry(variable_mapping[entry.variable_id], entry.precondition_value, entry.effect_value);
                 projected_entries.push_back(projected_entry);
             }
         }
+        // cout << "Oper " << oper.name << " Entries: [";
+        // for(size_t i=0; i < projected_entries.size(); i++)
+        //     cout << "var " << projected_entries[i].variable_id << " ";
+        // cout << "]" << endl;
         TNFOperator projected_oper(projected_entries, oper.cost, oper.name);
-        if(!projected_oper.entries.empty()){
+        if(!projected_oper.entries.empty() && !bNoOp){
+            // cout << oper.name << " added" << endl;
             projected_task.operators.push_back(projected_oper);
         }
     }
