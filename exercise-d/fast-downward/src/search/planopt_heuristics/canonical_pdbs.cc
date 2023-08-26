@@ -30,7 +30,23 @@ vector<vector<int>> build_compatibility_graph(const vector<Pattern> &patterns, c
     vector<vector<int>> graph(patterns.size());
 
     // TODO: add your code for exercise (d) here.
-
+    // For ever patterns (/every node)
+    for(int i=0; i < patterns.size(); i++)
+    {
+        // Check which patterns are compatible
+        for(int j=0; j < patterns.size(); j++){
+            bool bCompatible = true;
+            for(TNFOperator oper : task.operators){
+                if(affects_pattern(oper, patterns[i]) && affects_pattern(oper, patterns[j])){
+                    bCompatible = false;
+                    break;
+                }
+            }
+            if(bCompatible){
+                graph[i].push_back(j);
+            }
+        }
+    }
     return graph;
 }
 
@@ -47,34 +63,43 @@ CanonicalPatternDatabases::CanonicalPatternDatabases(
 
 int CanonicalPatternDatabases::compute_heuristic(const TNFState &original_state) {
     /*
-         To avoid the overhead of looking up the heuristic value of a PDB multiple
-         times (if that PDB occurs in multiple cliques), we pre-compute all
-         heuristic values. Use heuristic_values[i] for the heuristic value of
-         pdbs[i] in your code below.
-       */
-       vector<int> heuristic_values;
-       heuristic_values.reserve(pdbs.size());
-       for (const PatternDatabase &pdb : pdbs) {
-           heuristic_values.push_back(pdb.lookup_distance(original_state));
-           /*
-             special case: if one of the PDBs detects unsolvability, we can
-             return infinity right away. Otherwise, we would have to deal with
-             integer overflows when adding numbers below.
-           */
-           if (heuristic_values.back() == numeric_limits<int>::max()) {
-               return numeric_limits<int>::max();
-           }
-       }
+        To avoid the overhead of looking up the heuristic value of a PDB multiple
+        times (if that PDB occurs in multiple cliques), we pre-compute all
+        heuristic values. Use heuristic_values[i] for the heuristic value of
+        pdbs[i] in your code below.
+    */
+    vector<int> heuristic_values;
+    heuristic_values.reserve(pdbs.size());
+    for (const PatternDatabase &pdb : pdbs) {
+        heuristic_values.push_back(pdb.lookup_distance(original_state));
+        /*
+            special case: if one of the PDBs detects unsolvability, we can
+            return infinity right away. Otherwise, we would have to deal with
+            integer overflows when adding numbers below.
+        */
+        if (heuristic_values.back() == numeric_limits<int>::max()) {
+            return numeric_limits<int>::max();
+        }
+    }
 
-       /*
-         Use maximal_additive_sets and heuristic_values to compute the value
-         of the canonical heuristic.
-       */
-       int h = 0;
+    /*
+        Use maximal_additive_sets and heuristic_values to compute the value
+        of the canonical heuristic.
+    */
+    int h = 0;
 
-       // TODO: add your code for exercise (d) here.
+    // TODO: add your code for exercise (d) here.
+    for(vector<int> clique : maximal_additive_sets){
+        int max = 0;
+        for(int i=0; i < clique.size(); i++){
+            max += heuristic_values[clique[i]];
+        }
+        if(h < max){
+            h = max;
+        }
+    }
 
-       return h;
+    return h;
 }
 
 
